@@ -11,6 +11,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'button_style.dart';
@@ -698,6 +699,13 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
   void initState() {
     super.initState();
     _setOpacities();
+    if (kIsWeb && (widget.route.requestFocus ?? true)) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          FocusScope.of(context).nextFocus();
+        }
+      }, debugLabel: 'PopupMenu.focusFirstItem');
+    }
   }
 
   @override
@@ -779,9 +787,17 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
           namesRoute: true,
           explicitChildNodes: true,
           label: widget.semanticLabel,
-          child: SingleChildScrollView(
-            padding: widget.route.menuPadding ?? popupMenuTheme.menuPadding ?? defaults.menuPadding,
-            child: ListBody(children: children),
+          child: Shortcuts(
+            includeSemantics: false,
+            shortcuts: const <ShortcutActivator, Intent>{
+              SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
+              SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+            },
+            child: SingleChildScrollView(
+              padding:
+                  widget.route.menuPadding ?? popupMenuTheme.menuPadding ?? defaults.menuPadding,
+              child: ListBody(children: children),
+            ),
           ),
         ),
       ),

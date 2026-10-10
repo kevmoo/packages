@@ -2040,6 +2040,23 @@ void main() {
     final Finder xText = find.text('X');
     expect(tester.getSize(xText).isEmpty, isTrue);
   });
+
+  testWidgets('AboutDialog applicationName has headingLevel 2 semantics', (
+    WidgetTester tester,
+  ) async {
+    final SemanticsHandle handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AboutDialog(applicationName: 'Accessible App', applicationVersion: '1.0.0'),
+        ),
+      ),
+    );
+
+    final SemanticsNode node = tester.getSemantics(find.text('Accessible App'));
+    expect(node.headingLevel, 2);
+    handle.dispose();
+  });
 }
 
 class FakeLicenseEntry extends LicenseEntry {

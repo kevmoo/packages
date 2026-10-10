@@ -648,7 +648,8 @@ class SegmentedButtonState<T> extends State<SegmentedButton<T>> {
 
       return MergeSemantics(
         child: Semantics(
-          selected: segmentSelected,
+          selected: kIsWeb ? null : segmentSelected,
+          checked: kIsWeb ? segmentSelected : null,
           inMutuallyExclusiveGroup: widget.multiSelectionEnabled ? null : true,
           child: buttonWithTooltip,
         ),

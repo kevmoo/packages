@@ -34,6 +34,7 @@ class _MainWidgetState extends State<_MainWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final int? maxLines = MediaQuery.textScalerOf(context).scale(1.0) > 1.0 ? null : 1;
     return Scaffold(
       appBar: AppBar(title: Semantics(headingLevel: 1, child: Text('$pageTitle Demo'))),
       body: Form(
@@ -41,10 +42,14 @@ class _MainWidgetState extends State<_MainWidget> {
         child: ListView(
           children: <Widget>[
             Semantics(
+              container: true,
+              explicitChildNodes: true,
               label: 'Enabled text form field',
               child: TextFormField(
                 key: const Key('enabled text form field'),
-                maxLines: null,
+                maxLines: maxLines,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const <String>[AutofillHints.email],
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   suffixText: '@gmail.com',
@@ -59,10 +64,14 @@ class _MainWidgetState extends State<_MainWidget> {
               ),
             ),
             Semantics(
+              container: true,
+              explicitChildNodes: true,
               label: 'Disabled text form field',
               child: TextFormField(
                 key: const Key('disabled text form field'),
-                maxLines: null,
+                maxLines: maxLines,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const <String>[AutofillHints.email],
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   suffixText: '@gmail.com',

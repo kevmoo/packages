@@ -89,8 +89,11 @@ class _MainWidgetState extends State<_MainWidget> {
       body: ListView(
         children: <Widget>[
           Semantics(
+            container: true,
+            explicitChildNodes: true,
             label: 'Enabled search bar',
             child: SearchAnchor(
+              viewHintText: 'Search...',
               builder: (BuildContext context, SearchController controller) {
                 return SearchBar(
                   key: const Key('enabled search bar'),
@@ -126,6 +129,8 @@ class _MainWidgetState extends State<_MainWidget> {
             ),
           ),
           Semantics(
+            container: true,
+            explicitChildNodes: true,
             label: 'Disabled search bar',
             child: const SearchBar(
               key: Key('disabled search bar'),

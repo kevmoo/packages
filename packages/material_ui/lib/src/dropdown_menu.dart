@@ -1084,8 +1084,11 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
 
   void handleUpKey(_ArrowUpIntent _) {
     setState(() {
-      if (!widget.enabled || !_menuHasEnabledItem || !_controller.isOpen) {
+      if (!widget.enabled || !_menuHasEnabledItem) {
         return;
+      }
+      if (!_controller.isOpen) {
+        handlePressed(_controller, focusForKeyboard: !canRequestFocus());
       }
       _enableFilter = false;
       _enableSearch = false;
@@ -1104,8 +1107,11 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
 
   void handleDownKey(_ArrowDownIntent _) {
     setState(() {
-      if (!widget.enabled || !_menuHasEnabledItem || !_controller.isOpen) {
+      if (!widget.enabled || !_menuHasEnabledItem) {
         return;
+      }
+      if (!_controller.isOpen) {
+        handlePressed(_controller, focusForKeyboard: !canRequestFocus());
       }
       _enableFilter = false;
       _enableSearch = false;
@@ -1469,6 +1475,9 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
 
   Widget? _buildDefaultSuffixIcon(BuildContext context, MenuController controller) {
     final bool isCollapsed = widget.inputDecorationTheme?.isCollapsed ?? false;
+    final Widget effectiveIcon = controller.isOpen
+        ? (widget.selectedTrailingIcon ?? const Icon(Icons.arrow_drop_up))
+        : (widget.trailingIcon ?? const Icon(Icons.arrow_drop_down));
     return widget.showTrailingIcon
         ? Padding(
             padding: isCollapsed ? EdgeInsets.zero : const EdgeInsets.all(4.0),
@@ -1481,11 +1490,19 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
               excluding: isButton,
               child: IconButton(
                 focusNode: _trailingIconButtonFocusNode,
-                isSelected: controller.isOpen,
+                isSelected: kIsWeb ? null : controller.isOpen,
+                tooltip: isButton ? null : MaterialLocalizations.of(context).showMenuTooltip,
                 constraints: widget.inputDecorationTheme?.suffixIconConstraints,
                 padding: isCollapsed ? EdgeInsets.zero : null,
-                icon: widget.trailingIcon ?? const Icon(Icons.arrow_drop_down),
-                selectedIcon: widget.selectedTrailingIcon ?? const Icon(Icons.arrow_drop_up),
+                icon: Semantics(
+                  expanded: widget.enabled ? controller.isOpen : null,
+                  child: kIsWeb
+                      ? effectiveIcon
+                      : (widget.trailingIcon ?? const Icon(Icons.arrow_drop_down)),
+                ),
+                selectedIcon: kIsWeb
+                    ? null
+                    : (widget.selectedTrailingIcon ?? const Icon(Icons.arrow_drop_up)),
                 onPressed: !widget.enabled
                     ? null
                     : () {

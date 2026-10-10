@@ -702,18 +702,40 @@ class _MenuAnchorState extends State<MenuAnchor> with SingleTickerProviderStateM
     final Widget child = _MenuAnchorScope(
       state: this,
       animationStatus: _animationController.status,
-      child: RawMenuAnchor(
-        onOpenRequested: _handleMenuOpenRequest,
-        onCloseRequested: _handleMenuCloseRequest,
-        useRootOverlay: widget.useRootOverlay,
-        onOpen: widget.onOpen,
-        onClose: widget.onClose,
-        consumeOutsideTaps: widget.consumeOutsideTap,
-        controller: _menuController,
-        childFocusNode: widget.childFocusNode,
-        overlayBuilder: _buildOverlay,
-        builder: widget.builder,
-        child: widget.child,
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          DirectionalFocusIntent: CallbackAction<DirectionalFocusIntent>(
+            onInvoke: (DirectionalFocusIntent intent) {
+              if (!isSubmenu && _menuController.isOpen && !_menuScopeNode.hasFocus) {
+                switch (intent.direction) {
+                  case TraversalDirection.down:
+                    _focusFirstMenuItem();
+                    return null;
+                  case TraversalDirection.up:
+                    _focusLastMenuItem();
+                    return null;
+                  case TraversalDirection.left:
+                  case TraversalDirection.right:
+                    break;
+                }
+              }
+              return Actions.maybeInvoke(context, intent);
+            },
+          ),
+        },
+        child: RawMenuAnchor(
+          onOpenRequested: _handleMenuOpenRequest,
+          onCloseRequested: _handleMenuCloseRequest,
+          useRootOverlay: widget.useRootOverlay,
+          onOpen: widget.onOpen,
+          onClose: widget.onClose,
+          consumeOutsideTaps: widget.consumeOutsideTap,
+          controller: _menuController,
+          childFocusNode: widget.childFocusNode,
+          overlayBuilder: _buildOverlay,
+          builder: widget.builder,
+          child: widget.child,
+        ),
       ),
     );
 
@@ -1314,6 +1336,17 @@ class _MenuItemButtonState extends State<MenuItemButton> {
 
     if (widget.onHover != null || widget.requestFocusOnHover) {
       child = MouseRegion(onHover: _handlePointerHover, onExit: _handlePointerExit, child: child);
+    }
+
+    final _MenuAnchorState? parentAnchor = _anchor;
+    final bool isInMenu =
+        parentAnchor != null &&
+        parentAnchor.widget.menuChildren.isNotEmpty &&
+        (parentAnchor._orientation == Axis.horizontal ||
+            _MenuAnchorState._maybeAnimationStatusOf(context) != null);
+
+    if (kIsWeb && isInMenu) {
+      child = Semantics(role: ui.SemanticsRole.menuItem, child: child);
     }
 
     return MergeSemantics(child: child);
@@ -2264,8 +2297,11 @@ class _SubmenuButtonState extends State<SubmenuButton> {
             }
           }
 
+          final bool isInMenu = _parent != null && _parent!.widget.menuChildren.isNotEmpty;
+
           child = MergeSemantics(
             child: Semantics(
+              role: kIsWeb && isInMenu ? ui.SemanticsRole.menuItem : ui.SemanticsRole.none,
               expanded: _enabled && _animationStatus.isForwardOrCompleted,
               child: TextButton(
                 style: mergedStyle,
@@ -2373,6 +2409,12 @@ class _SubmenuButtonState extends State<SubmenuButton> {
       return;
     }
 
+    if (kIsWeb &&
+        _parent?._orientation == Axis.horizontal &&
+        !(_anchorState?._root._menuController.isOpen ?? false)) {
+      return;
+    }
+
     if (_menuController.isOpen) {
       if (_animationStatus != AnimationStatus.reverse) {
         // If the menu isn't closing, there's no reason to reopen it.
@@ -2466,7 +2508,16 @@ class _SubmenuDirectionalFocusAction extends DirectionalFocusAction {
         if (isSubmenu) {
           // If this is a top-level (horizontal) button in a menubar, focus the
           // first item in this button's submenu.
-          _anchorState?._focusFirstMenuItem();
+          if (_controller.isOpen) {
+            _anchorState?._focusFirstMenuItem();
+          } else {
+            _controller.open();
+            SchedulerBinding.instance.addPostFrameCallback((Duration timestamp) {
+              if (_controller.isOpen) {
+                _anchorState?._focusFirstMenuItem();
+              }
+            });
+          }
           return;
         }
       case (Axis.horizontal, _, TraversalDirection.up):
@@ -2831,13 +2882,21 @@ class _MenuBarAnchorState extends _MenuAnchorState {
         child: Builder(
           builder: (BuildContext context) {
             final bool isOpen = MenuController.maybeIsOpenOf(context) ?? false;
-            return FocusScope(
+            Widget result = FocusScope(
               node: _menuScopeNode,
-              skipTraversal: !isOpen,
-              canRequestFocus: isOpen,
+              skipTraversal: !kIsWeb && !isOpen,
+              canRequestFocus: kIsWeb || isOpen,
               descendantsAreFocusable: true,
-              child: ExcludeFocus(excluding: !isOpen, child: child),
+              child: ExcludeFocus(excluding: !kIsWeb && !isOpen, child: child),
             );
+            if (kIsWeb && widget.menuChildren.isNotEmpty) {
+              result = Semantics(
+                role: ui.SemanticsRole.menuBar,
+                explicitChildNodes: true,
+                child: result,
+              );
+            }
+            return result;
           },
         ),
       ),
@@ -3925,6 +3984,34 @@ class _Submenu extends StatelessWidget {
           )
         : Rect.zero;
 
+    Widget submenuFocusScope = FocusScope(
+      node: anchor._menuScopeNode,
+      skipTraversal: true,
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          DismissIntent: DismissMenuAction(controller: anchor._menuController),
+        },
+        child: Shortcuts(
+          shortcuts: _kMenuTraversalShortcuts,
+          child: FadeTransition(
+            opacity: fadeAnimation,
+            alwaysIncludeSemantics: true,
+            child: _MenuPanel(
+              menuStyle: menuStyle,
+              clipBehavior: clipBehavior,
+              orientation: anchor._orientation,
+              crossAxisUnconstrained: crossAxisUnconstrained,
+              heightAnimation: heightAnimation,
+              children: menuChildren,
+            ),
+          ),
+        ),
+      ),
+    );
+    if (kIsWeb && anchor.widget.menuChildren.isNotEmpty) {
+      submenuFocusScope = Semantics(role: ui.SemanticsRole.menu, child: submenuFocusScope);
+    }
+
     final Widget menuPanel = TapRegion(
       groupId: menuPosition.tapRegionGroupId,
       consumeOutsideTaps: anchor._root._menuController.isOpen && anchor.widget.consumeOutsideTap,
@@ -3934,30 +4021,7 @@ class _Submenu extends StatelessWidget {
       child: MouseRegion(
         cursor: mouseCursor,
         hitTestBehavior: HitTestBehavior.deferToChild,
-        child: FocusScope(
-          node: anchor._menuScopeNode,
-          skipTraversal: true,
-          child: Actions(
-            actions: <Type, Action<Intent>>{
-              DismissIntent: DismissMenuAction(controller: anchor._menuController),
-            },
-            child: Shortcuts(
-              shortcuts: _kMenuTraversalShortcuts,
-              child: FadeTransition(
-                opacity: fadeAnimation,
-                alwaysIncludeSemantics: true,
-                child: _MenuPanel(
-                  menuStyle: menuStyle,
-                  clipBehavior: clipBehavior,
-                  orientation: anchor._orientation,
-                  crossAxisUnconstrained: crossAxisUnconstrained,
-                  heightAnimation: heightAnimation,
-                  children: menuChildren,
-                ),
-              ),
-            ),
-          ),
-        ),
+        child: submenuFocusScope,
       ),
     );
 

@@ -441,7 +441,11 @@ class AboutDialog extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: ListBody(
                     children: <Widget>[
-                      Text(name, style: themeData.textTheme.headlineSmall),
+                      Semantics(
+                        container: true,
+                        headingLevel: 2,
+                        child: Text(name, style: themeData.textTheme.headlineSmall),
+                      ),
                       Text(version, style: themeData.textTheme.bodyMedium),
                       const SizedBox(height: _textVerticalSeparation),
                       Text(applicationLegalese ?? '', style: themeData.textTheme.bodySmall),
@@ -472,6 +476,7 @@ class AboutDialog extends StatelessWidget {
           },
         ),
         TextButton(
+          autofocus: kIsWeb,
           child: Text(
             themeData.useMaterial3
                 ? localizations.closeButtonLabel
@@ -554,6 +559,7 @@ class _AdaptiveAboutDialog extends AboutDialog {
             },
           ),
           TextButton(
+            autofocus: kIsWeb,
             child: Text(
               themeData.useMaterial3
                   ? localizations.closeButtonLabel
@@ -589,7 +595,11 @@ class _AdaptiveAboutDialog extends AboutDialog {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: ListBody(
                     children: <Widget>[
-                      Text(name, style: themeData.textTheme.headlineSmall),
+                      Semantics(
+                        container: true,
+                        headingLevel: 2,
+                        child: Text(name, style: themeData.textTheme.headlineSmall),
+                      ),
                       Text(version, style: themeData.textTheme.bodyMedium),
                       const SizedBox(height: _textVerticalSeparation),
                       Text(applicationLegalese ?? '', style: themeData.textTheme.bodySmall),

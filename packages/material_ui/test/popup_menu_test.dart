@@ -7,6 +7,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -5139,6 +5140,43 @@ void main() {
     // Test with theme.platform = iOS on different real platforms.
     await pumpPopupMenuWithTheme(TargetPlatform.iOS);
   }, variant: TargetPlatformVariant.all());
+
+  testWidgets('Pressing ArrowDown and ArrowUp navigates between PopupMenuItems', (
+    WidgetTester tester,
+  ) async {
+    FocusNode nodeA() => Focus.of(find.text('Item A').evaluate().single);
+    FocusNode nodeB() => Focus.of(find.text('Item B').evaluate().single);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: PopupMenuButton<String>(
+              itemBuilder: (_) => const <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(value: 'a', child: Text('Item A')),
+                PopupMenuItem<String>(value: 'b', child: Text('Item B')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+
+    nodeA().requestFocus();
+    await tester.pump();
+    expect(nodeA().hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(nodeB().hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(nodeA().hasFocus, isTrue);
+  });
 }
 
 Matcher overlaps(Rect other) => OverlapsMatcher(other);

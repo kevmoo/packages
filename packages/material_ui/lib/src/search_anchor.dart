@@ -1206,7 +1206,9 @@ class _ViewContentState extends State<_ViewContent> {
                                 ),
                                 leading: widget.viewLeading ?? defaultLeading,
                                 trailing: widget.viewTrailing ?? defaultTrailing,
-                                hintText: widget.viewHintText,
+                                hintText:
+                                    widget.viewHintText ??
+                                    MaterialLocalizations.of(context).searchFieldLabel,
                                 backgroundColor: const MaterialStatePropertyAll<Color>(
                                   Colors.transparent,
                                 ),
@@ -1829,6 +1831,7 @@ class _SearchBarState extends State<SearchBar> {
           child: IgnorePointer(
             ignoring: !widget.enabled,
             child: InkWell(
+              canRequestFocus: false,
               onTap: () {
                 widget.onTap?.call();
                 if (!_focusNode.hasFocus) {
@@ -1849,6 +1852,9 @@ class _SearchBarState extends State<SearchBar> {
                         padding: effectivePadding,
                         child: Semantics(
                           inputType: SemanticsInputType.search,
+                          label: (widget.controller?.text.isNotEmpty ?? false)
+                              ? widget.hintText
+                              : null,
                           child: TextField(
                             readOnly: widget.readOnly,
                             autofocus: widget.autoFocus,

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui';
+
 import 'package:material_ui/material_ui.dart';
 import '../utils.dart';
 import 'use_cases.dart';
@@ -38,30 +40,35 @@ class MainWidgetState extends State<MainWidget> {
     return Scaffold(
       appBar: AppBar(title: Semantics(headingLevel: 1, child: Text('$pageTitle Demo'))),
       body: Center(
-        child: SegmentedButton<String>(
-          segments: const <ButtonSegment<String>>[
-            ButtonSegment<String>(
-              value: 'Day',
-              label: Text('Day'),
-              icon: Icon(Icons.calendar_view_day),
-            ),
-            ButtonSegment<String>(
-              value: 'Week',
-              label: Text('Week'),
-              icon: Icon(Icons.calendar_view_week),
-            ),
-            ButtonSegment<String>(
-              value: 'Month',
-              label: Text('Month'),
-              icon: Icon(Icons.calendar_view_month),
-            ),
-          ],
-          selected: _selected,
-          onSelectionChanged: (Set<String> newSelection) {
-            setState(() {
-              _selected = newSelection;
-            });
-          },
+        child: Semantics(
+          container: true,
+          role: SemanticsRole.radioGroup,
+          label: 'Calendar view',
+          child: SegmentedButton<String>(
+            segments: const <ButtonSegment<String>>[
+              ButtonSegment<String>(
+                value: 'Day',
+                label: Text('Day'),
+                icon: Icon(Icons.calendar_view_day),
+              ),
+              ButtonSegment<String>(
+                value: 'Week',
+                label: Text('Week'),
+                icon: Icon(Icons.calendar_view_week),
+              ),
+              ButtonSegment<String>(
+                value: 'Month',
+                label: Text('Month'),
+                icon: Icon(Icons.calendar_view_month),
+              ),
+            ],
+            selected: _selected,
+            onSelectionChanged: (Set<String> newSelection) {
+              setState(() {
+                _selected = newSelection;
+              });
+            },
+          ),
         ),
       ),
     );

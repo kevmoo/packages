@@ -4557,6 +4557,29 @@ void main() {
     expect(size.height, 300.0);
     expect(size.width, 400.0);
   });
+
+  testWidgets(
+    'SearchBar outer InkWell does not intercept keyboard Tab focus and preserves hintText label when non-empty',
+    (WidgetTester tester) async {
+      final controller = SearchController();
+      addTearDown(controller.dispose);
+      controller.text = 'query';
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Material(
+            child: SearchBar(controller: controller, hintText: 'Search items', onTap: () {}),
+          ),
+        ),
+      );
+
+      final InkWell outerInkWell = tester.widget<InkWell>(
+        find.descendant(of: find.byType(SearchBar), matching: find.byType(InkWell)).first,
+      );
+      expect(outerInkWell.canRequestFocus, isFalse);
+      expect(find.bySemanticsLabel('Search items'), findsOneWidget);
+    },
+  );
 }
 
 Future<void> checkSearchBarDefaults(

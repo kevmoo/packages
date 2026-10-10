@@ -7077,6 +7077,59 @@ void main() {
 
     handle.dispose();
   });
+
+  testWidgets('Pressing ArrowDown when MenuAnchor is open moves focus into the first menu item', (
+    WidgetTester tester,
+  ) async {
+    final anchorFocusNode = FocusNode(debugLabel: 'Anchor');
+    final item1FocusNode = FocusNode(debugLabel: 'Item 1');
+    final item2FocusNode = FocusNode(debugLabel: 'Item 2');
+    addTearDown(anchorFocusNode.dispose);
+    addTearDown(item1FocusNode.dispose);
+    addTearDown(item2FocusNode.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: Center(
+            child: MenuAnchor(
+              childFocusNode: anchorFocusNode,
+              menuChildren: <Widget>[
+                MenuItemButton(
+                  focusNode: item1FocusNode,
+                  onPressed: () {},
+                  child: const Text('Item 1'),
+                ),
+                MenuItemButton(
+                  focusNode: item2FocusNode,
+                  onPressed: () {},
+                  child: const Text('Item 2'),
+                ),
+              ],
+              builder: (BuildContext context, MenuController controller, Widget? child) {
+                return ElevatedButton(
+                  focusNode: anchorFocusNode,
+                  onPressed: () {
+                    controller.open();
+                  },
+                  child: const Text('Open Menu'),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    anchorFocusNode.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(item1FocusNode.hasPrimaryFocus, isTrue);
+  });
 }
 
 List<Widget> createTestMenus({

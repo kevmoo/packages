@@ -38,20 +38,24 @@ class MainWidgetState extends State<MainWidget> {
     return Scaffold(
       appBar: AppBar(title: Semantics(headingLevel: 1, child: Text('$pageTitle Demo'))),
       body: Center(
-        child: ToggleButtons(
-          isSelected: _selected,
-          onPressed: (int index) {
-            setState(() {
-              _selected[index] = !_selected[index];
-            });
-          },
-          fillColor: Theme.of(context).colorScheme.primary,
-          selectedColor: Theme.of(context).colorScheme.onPrimary,
-          children: <Widget>[
-            Semantics(label: 'Bold', child: const Icon(Icons.format_bold)),
-            Semantics(label: 'Italic', child: const Icon(Icons.format_italic)),
-            Semantics(label: 'Underline', child: const Icon(Icons.format_underlined)),
-          ],
+        child: Semantics(
+          container: true,
+          label: 'Formatting options',
+          child: ToggleButtons(
+            isSelected: _selected,
+            onPressed: (int index) {
+              setState(() {
+                _selected[index] = !_selected[index];
+              });
+            },
+            fillColor: Theme.of(context).colorScheme.primary,
+            selectedColor: Theme.of(context).colorScheme.onPrimary,
+            children: <Widget>[
+              Semantics(label: 'Bold', child: const Icon(Icons.format_bold)),
+              Semantics(label: 'Italic', child: const Icon(Icons.format_italic)),
+              Semantics(label: 'Underline', child: const Icon(Icons.format_underlined)),
+            ],
+          ),
         ),
       ),
     );

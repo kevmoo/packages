@@ -53,7 +53,7 @@ class _MainWidgetState extends State<_MainWidget> {
                       controller.open();
                     }
                   },
-                  child: const Text('Open Menu'),
+                  child: Semantics(expanded: controller.isOpen, child: const Text('Open Menu')),
                 );
               },
               menuChildren: <Widget>[
@@ -74,7 +74,13 @@ class _MainWidgetState extends State<_MainWidget> {
             child: MenuAnchor(
               key: const Key('disabled menu anchor'),
               builder: (BuildContext context, MenuController controller, Widget? child) {
-                return const ElevatedButton(onPressed: null, child: Text('Disabled Menu Button'));
+                return ElevatedButton(
+                  onPressed: null,
+                  child: Semantics(
+                    expanded: controller.isOpen,
+                    child: const Text('Disabled Menu Button'),
+                  ),
+                );
               },
               menuChildren: const <Widget>[MenuItemButton(child: Text('Disabled Item'))],
             ),

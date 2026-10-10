@@ -5402,6 +5402,42 @@ void main() {
 
     expect(controller.text, selectNoneLabel);
   });
+
+  testWidgets('Pressing ArrowDown or ArrowUp when DropdownMenu is closed opens the menu', (
+    WidgetTester tester,
+  ) async {
+    final menuController = MenuController();
+    final focusNode = FocusNode();
+    addTearDown(focusNode.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DropdownMenu<TestMenu>(
+            focusNode: focusNode,
+            menuController: menuController,
+            dropdownMenuEntries: menuChildren,
+          ),
+        ),
+      ),
+    );
+
+    focusNode.requestFocus();
+    await tester.pump();
+    expect(menuController.isOpen, isFalse);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(menuController.isOpen, isTrue);
+
+    menuController.close();
+    await tester.pumpAndSettle();
+    expect(menuController.isOpen, isFalse);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pumpAndSettle();
+    expect(menuController.isOpen, isTrue);
+  });
 }
 
 enum TestMenu {
